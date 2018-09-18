@@ -1,5 +1,5 @@
 <?php
-class Zimmer {
+class Zimmerkategorie {
  
     // database connection and table name
     private $conn;

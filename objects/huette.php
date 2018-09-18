@@ -16,6 +16,9 @@ class Huette {
     public $mail;
     public $preis;
     public $imageurl;
+
+    // helper properties
+    public $categoryID;
  
     // constructor with $db as database connection
     public function __construct($db){
@@ -68,6 +71,58 @@ class Huette {
         $this->mail = $row['mail'];
         $this->preis = $row['preis'];
         $this->imageurl = $row['imageurl'];
+    }
+
+
+     function readZimmer() {
+        $query = "SELECT z.zimmerID FROM zimmer z
+                    WHERE z.huetteID = ?";
+     
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+     
+        // bind id of product to be updated
+        $stmt->bindParam(1, $this->huetteID);
+
+        // execute query
+        $stmt->execute();
+     
+        return $stmt;
+    }
+
+    function readZimmerkategorien() {
+        $query = "SELECT DISTINCT kat.* FROM zimmerkategorie kat, zimmer z
+                    WHERE z.huetteID = ? 
+                    AND z.zimmerkategorieID = kat.zimmerkategorieID";
+     
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+     
+        // bind id of product to be updated
+        $stmt->bindParam(1, $this->huetteID);
+
+        // execute query
+        $stmt->execute();
+     
+        return $stmt;
+    }
+
+    function readAllOfCategory() {
+        $query = "SELECT * FROM zimmer z
+                    WHERE z.huetteID = ? 
+                    AND z.zimmerkategorieID = ?";
+     
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+     
+        // bind id of product to be updated
+        $stmt->bindParam(1, $this->huetteID);
+        $stmt->bindParam(2, $this->categoryID);
+
+        // execute query
+        $stmt->execute();
+     
+        return $stmt;
     }
 
 }
