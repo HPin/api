@@ -45,7 +45,8 @@ if($num>0){
             "telefonnummer" => $telefonnummer,
             "mail" => $mail,
             "preis" => $preis,
-            "imageurl" => $imageurl
+            "imageurl" => $imageurl,
+            "fruehstueckspreis" => $fruehstueckspreis
         );
  
         array_push($huetten_arr["records"], $huette_item);

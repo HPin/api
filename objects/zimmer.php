@@ -10,6 +10,8 @@ class Zimmer {
     public $zimmerkategorieID;
     public $huetteID;
     public $plaetze;
+    public $preisErw;
+    public $preisJgd;
     public $bezeichnung;
  
     // constructor with $db as database connection
@@ -55,6 +57,8 @@ class Zimmer {
         $this->zimmerID = $row['zimmerID'];
         $this->zimmerkategorieID = $row['zimmerkategorieID'];
         $this->huetteID = $row['huetteID'];
+        $this->preisErw = $row['preisErw'];
+        $this->preisJgd = $row['preisJgd'];
         $this->plaetze = $row['plaetze'];
         $this->bezeichnung = $row['bezeichnung'];
     }

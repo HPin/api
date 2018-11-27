@@ -42,6 +42,8 @@ if($num>0){
             "zimmerID" => $zimmerID,
             "zimmerkategorieID" => $zimmerkategorieID,
             "huetteID" => $huetteID,
+            "preisErw" => $preisErw,
+            "preisJgd" => $preisJgd,
             "plaetze" => $plaetze,
             "bezeichnung" => $bezeichnung
         );

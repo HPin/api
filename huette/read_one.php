@@ -33,7 +33,8 @@ $huette_arr=array(
     "telefonnummer" => $huette->telefonnummer,
     "mail" => $huette->mail,
     "preis" => $huette->preis,
-    "imageurl" => $huette->imageurl
+    "imageurl" => $huette->imageurl,
+    "fruehstueckspreis" => $huette->fruehstueckspreis
 );
  
 // make it json format

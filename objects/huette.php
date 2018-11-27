@@ -16,6 +16,7 @@ class Huette {
     public $mail;
     public $preis;
     public $imageurl;
+    public $fruehstueckspreis;
 
     // helper properties
     public $categoryID;
@@ -71,6 +72,7 @@ class Huette {
         $this->mail = $row['mail'];
         $this->preis = $row['preis'];
         $this->imageurl = $row['imageurl'];
+        $this->fruehstueckspreis = $row['fruehstueckspreis'];
     }
 
 

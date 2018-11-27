@@ -45,7 +45,7 @@ if($buchung->create()){
 // if unable to create the buchung, tell the user
 else{
     echo '{';
-        echo '"message": "Unable to create Buchung."';
+        echo '"message": "Unable to create Booking."';
     echo '}';
 }
 ?>

@@ -27,6 +27,8 @@ $object_arr=array(
     "zimmerID" => $object->zimmerID,
     "zimmerkategorieID" => $object->zimmerkategorieID,
     "huetteID" => $object->huetteID,
+    "preisErw" => $preisErw,
+    "preisJgd" => $preisJgd,
     "plaetze" => $object->plaetze,
     "bezeichnung" => $object->bezeichnung
 );
