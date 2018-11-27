@@ -49,7 +49,7 @@ class Buchung {
         return $stmt;
     }
 
-    // read products
+    
     function readMonth() {
      
         // select all query
