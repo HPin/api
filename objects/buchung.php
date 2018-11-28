@@ -56,15 +56,17 @@ class Buchung {
         $query = "SELECT b.*, u.vorname as buchenderVorname, u.nachname as buchenderNachname
          FROM buchung b, user u 
          WHERE b.buchenderID = u.userID 
-            AND MONTH(b.checkinDatum)=? 
-            AND YEAR(b.checkinDatum)=?";
+            AND (MONTH(b.checkinDatum)=? OR MONTH(b.checkoutDatum)=?)
+            AND (YEAR(b.checkinDatum)=? OR YEAR(b.checkoutDatum)=?)";
      
         // prepare query statement
         $stmt = $this->conn->prepare($query);
      
         // bind id of product to be updated
         $stmt->bindParam(1, $this->bookingMonth);
-        $stmt->bindParam(2, $this->bookingYear);
+        $stmt->bindParam(2, $this->bookingMonth);
+        $stmt->bindParam(3, $this->bookingYear);
+        $stmt->bindParam(4, $this->bookingYear);
 
         // execute query
         $stmt->execute();

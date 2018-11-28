@@ -38,16 +38,19 @@ class Sperrtag {
     function readMonth() {
      
         // select all query
-        $query = "SELECT * FROM sperrtag 
-         WHERE MONTH(startDatum)=? 
-         AND YEAR(startDatum)=?";
+        $query = "SELECT * FROM sperrtag WHERE 
+            (MONTH(startDatum)=? OR MONTH(endDatum)=?)
+            AND 
+            (YEAR(startDatum)=? OR YEAR(endDatum)=?)";
      
         // prepare query statement
         $stmt = $this->conn->prepare($query);
      
         // bind id of product to be updated
         $stmt->bindParam(1, $this->bookingMonth);
-        $stmt->bindParam(2, $this->bookingYear);
+        $stmt->bindParam(2, $this->bookingMonth);
+        $stmt->bindParam(3, $this->bookingYear);
+        $stmt->bindParam(4, $this->bookingYear);
 
         // execute query
         $stmt->execute();
