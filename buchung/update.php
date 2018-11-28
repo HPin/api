@@ -23,9 +23,6 @@ $data = json_decode(file_get_contents("php://input"));
 // set ID property of product to be edited
 $buchung->buchungID = $data->buchungID;
  
-// set product property values
-$buchung->buchenderID = $data->buchenderID;
- 
 // update the product
 if($buchung->update()){
     echo '{';

@@ -40,18 +40,27 @@ if($num>0){
  
         $buchung_item=array(
             "buchungID" => $buchungID,
-            "buchenderID" => $buchenderID,
-            "buchenderVorname" => $buchenderVorname,
-            "buchenderNachname" => $buchenderNachname,
             "huetteID" => $huetteID,
             "zimmerID" => $zimmerID,
             "erwachsene" => $erwachsene,
+            "jugendliche" => $jugendliche,
             "kinder" => $kinder,
             "checkinDatum" => $checkinDatum,
             "checkoutDatum" => $checkoutDatum,
             "buchungsDatum" => $buchungsDatum,
+            "preis" => $preis,
             "zahlungsDatum" => $zahlungsDatum,
-            "zahlungsartID" => $zahlungsartID
+            "zahlungsartID" => $zahlungsartID,
+            "fruehstuecksanzahl" => $fruehstuecksanzahl,
+            "bvorname" => $bvorname,
+            "bnachname" => $bnachname,
+            "bgeburtsdatum" => $bgeburtsdatum,
+            "badresse" => $badresse,
+            "bplz" => $bplz,
+            "bort" => $bort,
+            "btelefonnummer" => $btelefonnummer,
+            "bmail" => $bmail,
+            "bmitglied" => $bmitglied
         );
  
         array_push($buchung_arr["records"], $buchung_item);

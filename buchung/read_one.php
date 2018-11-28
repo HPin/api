@@ -25,18 +25,27 @@ $buchung->readOne();
 // create array
 $buchung_arr=array(
     "buchungID" => $buchung->buchungID,
-    "buchenderID" => $buchung->buchenderID,
-    "buchenderVorname" => $buchung->buchenderVorname,
-    "buchenderNachname" => $buchung->buchenderNachname,
     "huetteID" => $buchung->huetteID,
     "zimmerID" => $buchung->zimmerID,
     "erwachsene" => $buchung->erwachsene,
+    "jugendliche" => $buchung->jugendliche,
     "kinder" => $buchung->kinder,
     "checkinDatum" => $buchung->checkinDatum,
     "checkoutDatum" => $buchung->checkoutDatum,
     "buchungsDatum" => $buchung->buchungsDatum,
+    "preis" => $buchung->preis,
     "zahlungsDatum" => $buchung->zahlungsDatum,
-    "zahlungsartID" => $buchung->zahlungsartID
+    "zahlungsartID" => $buchung->zahlungsartID,
+    "fruehstuecksanzahl" => $buchung->fruehstuecksanzahl,
+    "bvorname" => $buchung->bvorname,
+    "bnachname" => $buchung->bnachname,
+    "bgeburtsdatum" => $buchung->bgeburtsdatum,
+    "badresse" => $buchung->badresse,
+    "bplz" => $buchung->bplz,
+    "bort" => $buchung->bort,
+    "btelefonnummer" => $buchung->btelefonnummer,
+    "bmail" => $buchung->bmail,
+    "bmitglied" => $buchung->bmitglied
 );
  
 // make it json format
