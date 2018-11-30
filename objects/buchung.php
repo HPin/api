@@ -63,6 +63,7 @@ class Buchung {
      
         // select all query
         $query = "SELECT * FROM buchung b WHERE 
+            b.huetteID = ? AND
             (MONTH(b.checkinDatum)=? OR MONTH(b.checkoutDatum)=?) AND 
             (YEAR(b.checkinDatum)=? OR YEAR(b.checkoutDatum)=?)";
      
@@ -70,10 +71,11 @@ class Buchung {
         $stmt = $this->conn->prepare($query);
      
         // bind id of product to be updated
-        $stmt->bindParam(1, $this->bookingMonth);
+        $stmt->bindParam(1, $this->huetteID);
         $stmt->bindParam(2, $this->bookingMonth);
-        $stmt->bindParam(3, $this->bookingYear);
+        $stmt->bindParam(3, $this->bookingMonth);
         $stmt->bindParam(4, $this->bookingYear);
+        $stmt->bindParam(5, $this->bookingYear);
 
         // execute query
         $stmt->execute();

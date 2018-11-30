@@ -47,8 +47,10 @@ $row = $stmt->fetch(PDO::FETCH_ASSOC);
 // extract information and set flags
 if ($row['mail'] != '') {
 	$response['status'] = 'loggedin';
+	$response['huetteID'] = $row['huetteID'];
 	$response['firstname'] = $row['vorname'];
 	$response['lastname'] = $row['nachname'];
+	$response['phone'] = $row['telefonnummer'];
 	$response['user'] = $username;
 	$response['uuid'] = md5(uniqid());
 	$_SESSION['uuid'] = $response['uuid'];

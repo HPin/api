@@ -63,5 +63,23 @@ class Zimmer {
         $this->bezeichnung = $row['bezeichnung'];
     }
 
+    function read_for_huette() {
+     
+        // select all query
+        $query = "SELECT * FROM " . $this->table_name . " x
+            WHERE x.huetteID = ?";
+     
+        // prepare query statement
+        $stmt = $this->conn->prepare($query);
+
+        $stmt->bindParam(1, $this->huetteID);
+
+        // execute query
+        $stmt->execute();
+     
+        return $stmt;
+    }
+
+
 }
 ?>

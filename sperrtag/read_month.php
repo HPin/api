@@ -14,6 +14,7 @@ $db = $database->getConnection();
 // initialize object
 $object = new Sperrtag($db);
 
+$object->huetteID = isset($_GET['huetteID']) ? $_GET['huetteID'] : die();
 $object->bookingMonth = isset($_GET['month']) ? $_GET['month'] : die();
 $object->bookingYear = isset($_GET['year']) ? $_GET['year'] : die();
  

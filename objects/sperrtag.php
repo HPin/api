@@ -14,6 +14,7 @@ class Sperrtag {
     // additional properties for query
     public $bookingMonth;
     public $bookingYear;
+    public $huetteID;
  
     // constructor with $db as database connection
     public function __construct($db){
@@ -39,6 +40,7 @@ class Sperrtag {
      
         // select all query
         $query = "SELECT * FROM sperrtag WHERE 
+            huetteID = ? AND
             (MONTH(startDatum)=? OR MONTH(endDatum)=?)
             AND 
             (YEAR(startDatum)=? OR YEAR(endDatum)=?)";
@@ -47,10 +49,11 @@ class Sperrtag {
         $stmt = $this->conn->prepare($query);
      
         // bind id of product to be updated
-        $stmt->bindParam(1, $this->bookingMonth);
+        $stmt->bindParam(1, $this->huetteID);
         $stmt->bindParam(2, $this->bookingMonth);
-        $stmt->bindParam(3, $this->bookingYear);
+        $stmt->bindParam(3, $this->bookingMonth);
         $stmt->bindParam(4, $this->bookingYear);
+        $stmt->bindParam(5, $this->bookingYear);
 
         // execute query
         $stmt->execute();

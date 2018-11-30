@@ -14,6 +14,7 @@ $db = $database->getConnection();
 // initialize object
 $buchung = new Buchung($db);
 
+$buchung->huetteID = isset($_GET['huetteID']) ? $_GET['huetteID'] : die();
 $buchung->bookingMonth = isset($_GET['month']) ? $_GET['month'] : die();
 $buchung->bookingYear = isset($_GET['year']) ? $_GET['year'] : die();
  
