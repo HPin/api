@@ -41,6 +41,7 @@ if($num>0){
  
         $object_item=array(
             "sperrtagID" => $sperrtagID,
+            "huetteID" => $huetteID,
             "startDatum" => $startDatum,
             "endDatum" => $endDatum,
             "info" => $info

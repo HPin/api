@@ -7,6 +7,7 @@ class Sperrtag {
  
     // object properties
     public $sperrtagID;
+    public $huetteID;
     public $startDatum;
     public $endDatum;
     public $info;
@@ -14,7 +15,6 @@ class Sperrtag {
     // additional properties for query
     public $bookingMonth;
     public $bookingYear;
-    public $huetteID;
  
     // constructor with $db as database connection
     public function __construct($db){
@@ -25,11 +25,14 @@ class Sperrtag {
     function read() {
      
         // select all query
-        $query = "SELECT * FROM " . $this->table_name . " ";
+        $query = "SELECT * FROM " . $this->table_name . " 
+            WHERE huetteID = ?";
      
         // prepare query statement
         $stmt = $this->conn->prepare($query);
      
+        $stmt->bindParam(1, $this->huetteID);        
+
         // execute query
         $stmt->execute();
      
@@ -70,8 +73,11 @@ class Sperrtag {
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    sperrtagID=:sperrtagID, startDatum=:startDatum, 
-                    endDatum=:endDatum, info=:info
+                    sperrtagID=:sperrtagID, 
+                    huetteID=:huetteID,
+                    startDatum=:startDatum, 
+                    endDatum=:endDatum, 
+                    info=:info
                     ";
         
         // prepare query
@@ -79,12 +85,14 @@ class Sperrtag {
         
         // sanitize
         $this->sperrtagID=htmlspecialchars(strip_tags($this->sperrtagID));
+        $this->huetteID=htmlspecialchars(strip_tags($this->huetteID));
         $this->startDatum=htmlspecialchars(strip_tags($this->startDatum));
         $this->endDatum=htmlspecialchars(strip_tags($this->endDatum));
         $this->info=htmlspecialchars(strip_tags($this->info));
         
         // bind values
         $stmt->bindParam(":sperrtagID", $this->sperrtagID);
+        $stmt->bindParam(":huetteID", $this->huetteID);
         $stmt->bindParam(":startDatum", $this->startDatum);
         $stmt->bindParam(":endDatum", $this->endDatum);
         $stmt->bindParam(":info", $this->info);

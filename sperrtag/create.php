@@ -25,6 +25,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // set object property values
     $object->startDatum = $data->startDatum;
     $object->endDatum = $data->endDatum;
+    $object->huetteID = $data->huetteID;
     $object->info = $data->info;
 
     // create the object

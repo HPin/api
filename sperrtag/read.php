@@ -14,6 +14,8 @@ $db = $database->getConnection();
 // initialize object
 $object = new Sperrtag($db);
  
+$object->huetteID = isset($_GET['huetteID']) ? $_GET['huetteID'] : die();
+
 // query products
 $stmt = $object->read();
 $num = $stmt->rowCount();
@@ -37,6 +39,7 @@ if($num>0){
  
         $object_item=array(
             "sperrtagID" => $sperrtagID,
+            "huetteID" => $huetteID,
             "startDatum" => $startDatum,
             "endDatum" => $endDatum,
             "info" => $info
