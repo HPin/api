@@ -196,6 +196,7 @@ class Buchung {
      
         // execute query
         if($stmt->execute()){
+            $this->buchungID = $this->conn->insert_id;
             return true;
         }
      
