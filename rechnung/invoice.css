@@ -1,0 +1,13 @@
+* {
+    font-family: Verdana, Arial, sans-serif;
+}
+table{
+    font-size: x-small;
+}
+tfoot tr td{
+    font-weight: bold;
+    font-size: x-small;
+}
+.gray {
+    background-color: lightgray
+}
