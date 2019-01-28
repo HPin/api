@@ -23,16 +23,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $data = json_decode(file_get_contents("php://input"));
     
     // set object property values
-    $object->receiver = $data->receiver;
-    $object->subject = $data->subject;
-    $object->message = $data->message;
-
-    $object->rechnungID = $data->rechnungID;
     $object->huetteID = $data->huetteID;
     $object->buchungID = $data->buchungID;
     $object->datum = $data->datum;
 
-    // create invoice and send mail
-    $object->send();
+    // create the object
+    if($object->create()){
+        echo '{';
+            echo '"message": "object was created."';
+        echo '}';
+    }
+    
+    // if unable to create the object, tell the user
+    else{
+        echo '{';
+            echo '"message": "Unable to create object."';
+        echo '}';
+    }
 }
 ?>

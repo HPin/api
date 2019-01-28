@@ -1,5 +1,10 @@
 <?php
 
+include_once '../config/database.php';
+include_once 'huette.php';
+include_once 'buchung.php';
+include_once 'zimmer.php';
+
 require_once('../lib/phpmailer/PHPMailerAutoload.php');
 require_once '../lib/dompdf/lib/html5lib/Parser.php';
 require_once '../lib/dompdf/lib/php-font-lib/src/FontLib/Autoloader.php';
@@ -19,6 +24,8 @@ class Rechnung {
     // object properties
     public $rechnungID;
     public $huetteID;
+    public $buchungID;
+    public $datum;
 
     // mail properties
     public $receiver;
@@ -31,6 +38,53 @@ class Rechnung {
     }
 
     function send() {
+        $database = new Database();
+        $db = $database->getConnection();
+
+        // create huette object and fill its parameters
+        $huette = new Huette($db);
+        $huette->huetteID = $this->huetteID;
+        $huette->readOne();
+
+        // create buchung object and fill its parameters
+        $buchung = new Buchung($db);
+        $buchung->buchungID = $this->buchungID;
+        $buchung->readOne();
+
+        // get one room and fill its parameters
+        $zimmer = new Zimmer($db);
+        $zimmer->zimmerID = $buchung->zimmerID;
+        $zimmer->readOne();
+
+        // get number of nights:
+        $date1 = new DateTime($buchung->checkinDatum);
+        $date2 = new DateTime($buchung->checkoutDatum);
+        $numberOfNights= $date2->diff($date1)->format("%a"); 
+
+        // invoice date format:
+        $this->datum = date_create($this->datum);
+
+        // get prices for the stay
+        $fruehstueckGesamtpreis = $buchung->fruehstuecksanzahl * $huette->fruehstueckspreis * $numberOfNights;
+
+        $erwachseneNights = $buchung->erwachsene * $numberOfNights;
+        $erwachseneGesamtpreis = $zimmer->preisErw * $erwachseneNights;
+
+        $jugendlicheNights = $buchung->jugendliche * $numberOfNights;
+        $jugendlicheGesamtpreis = $zimmer->preisJgd * $jugendlicheNights;
+
+        $kinderNights = $buchung->kinder * $numberOfNights;
+        $kinderGesamtpreis = 0;
+
+        $anzahlung = ($fruehstueckGesamtpreis + $erwachseneGesamtpreis + $jugendlicheGesamtpreis + $kinderGesamtpreis) * 0.5;
+
+        $gesamtpreisBrutto = $fruehstueckGesamtpreis + $erwachseneGesamtpreis + $jugendlicheGesamtpreis + $kinderGesamtpreis - $anzahlung;
+        $gesamtpreisNetto = $gesamtpreisBrutto / 1.1;
+        $steuer = $gesamtpreisBrutto - $gesamtpreisNetto;
+
+        $itemCounter = 0;
+        $formatter = new NumberFormatter('de_AT',  NumberFormatter::CURRENCY);
+
         $html_code = '
         <!doctype html>
         <html lang="de">
@@ -45,13 +99,13 @@ class Rechnung {
             <tr>
                 <td valign="top"><img src="logo.jpg" alt="" width="150"/></td>
                 <td align="right">
-                    <h3>Rohrauerhaus</h3>
+                    <h3>'.$huette->name.'</h3>
                     <pre>
                         Max Musterpächter
-                        Grünau 40
-                        4582 Spital am Pyhrn
-                        066412345678
-                        max@rohrauerhaus.at
+                        '.$huette->adresse.'
+                        '.$huette->plz.' '.$huette->ort.'
+                        '.$huette->telefonnummer.'
+                        '.$huette->mail.'
                     </pre>
                 </td>
             </tr>
@@ -60,11 +114,20 @@ class Rechnung {
 
         <table width="100%">
             <tr>
-                <td><strong>Datum:</strong> 23.01.2019</td>
+                <td>'.$buchung->bvorname.' '.$buchung->bnachname.'</td>
+            </tr>
+            <tr>
+                <td>'.$buchung->badresse.'</td>
+            </tr>
+            <tr>
+                <td>'.$buchung->bplz.' '.$buchung->bort.'</td>
             </tr>
         </table>
 
-        <h1>Rechnung Nr. 13</h1>
+        <br>
+        <p><strong>Rechnungsdatum:</strong> '.date_format($this->datum,"d.m.Y").'</p>
+
+        <h1>Rechnung Nr. '.$this->rechnungID.'</h1>
 
         <table width="100%">
             <thead style="background-color: lightgray;">
@@ -77,44 +140,92 @@ class Rechnung {
             </tr>
             </thead>
             <tbody>
+        ';
+
+
+        if ($fruehstueckGesamtpreis > 0) {
+            $itemCounter++;
+            $html_code .= '
             <tr>
-                <th scope="row">1</th>
-                <td>Übernachtung Erwachsene</td>
-                <td align="right">6</td>
-                <td align="right">50,00</td>
-                <td align="right">300,00</td>
-            </tr>
-            <tr>
-                <th scope="row">1</th>
+                <th scope="row">'.$itemCounter.'</th>
                 <td>Frühstück</td>
-                <td align="right">10</td>
-                <td align="right">7,50</td>
-                <td align="right">75,00</td>
+                <td align="right">'.$buchung->fruehstuecksanzahl.'</td>
+                <td align="right">'.$formatter->formatCurrency($huette->fruehstueckspreis, 'EUR').'</td>
+                <td align="right">'.$formatter->formatCurrency($fruehstueckGesamtpreis, 'EUR').'</td>
             </tr>
+            ';
+        }
+
+        if ($erwachseneNights > 0) {
+            $itemCounter++;
+            $html_code .= '
             <tr>
-                <th scope="row">1</th>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Übernachtung Erwachsene</td>
+                <td align="right">'.$erwachseneNights.'</td>
+                <td align="right">'.$formatter->formatCurrency($zimmer->preisErw, 'EUR').'</td>
+                <td align="right">'.$formatter->formatCurrency($erwachseneGesamtpreis, 'EUR').'</td>
+            </tr>
+            ';
+        }
+
+        if ($jugendlicheNights > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Übernachtung Jugendliche</td>
+                <td align="right">'.$jugendlicheNights.'</td>
+                <td align="right">'.$formatter->formatCurrency($zimmer->preisJgd, 'EUR').'</td>
+                <td align="right">'.$formatter->formatCurrency($jugendlicheGesamtpreis, 'EUR').'</td>
+            </tr>
+            ';
+        }
+
+        if ($kinderNights > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Übernachtung Kinder</td>
+                <td align="right">'.$kinderNights.'</td>
+                <td align="right">€ 0,00</td>
+                <td align="right">'.$formatter->formatCurrency($kinderGesamtpreis, 'EUR').'</td>
+            </tr>
+            ';
+        }
+
+        if ($anzahlung > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
                 <td>Anzahlung</td>
                 <td align="right"></td>
                 <td align="right"></td>
-                <td align="right">-75,00</td>
+                <td align="right">- '.$formatter->formatCurrency($anzahlung, 'EUR').'</td>
             </tr>
+            ';
+        }
+            
+        $html_code .= '
             </tbody>
 
             <tfoot>
                 <tr>
                     <td colspan="3"></td>
                     <td align="right">Netto €</td>
-                    <td align="right">240,00</td>
+                    <td align="right">'.$formatter->formatCurrency($gesamtpreisNetto, 'EUR').'</td>
                 </tr>
                 <tr>
                     <td colspan="3"></td>
-                    <td align="right">Steuer €</td>
-                    <td align="right">60,00</td>
+                    <td align="right">10 % USt €</td>
+                    <td align="right">'.$formatter->formatCurrency($steuer, 'EUR').'</td>
                 </tr>
                 <tr>
                     <td colspan="3"></td>
                     <td align="right">Gesamt (brutto) €</td>
-                    <td align="right" class="gray">300,00</td>
+                    <td align="right" class="gray">'.$formatter->formatCurrency($gesamtpreisBrutto, 'EUR').'</td>
                 </tr>
             </tfoot>
         </table>
@@ -219,7 +330,7 @@ class Rechnung {
         $stmt = $this->conn->prepare( $query );
      
         // bind id of product to be updated
-        $stmt->bindParam(1, $this->buchungID);
+        $stmt->bindParam(1, $this->rechnungID);
      
         // execute query
         $stmt->execute();
@@ -229,6 +340,9 @@ class Rechnung {
      
         // set values to object properties
         $this->rechnungID = $row['rechnungID'];
+        $this->huetteID = $row['huetteID'];
+        $this->buchungID = $row['buchungID'];
+        $this->datum = $row['datum'];
     }
 
     // create new entry
@@ -238,11 +352,7 @@ class Rechnung {
         $query = "INSERT INTO
                     " . $this->table_name . "
                 SET
-                    huetteID=:huetteID, zimmerID=:zimmerID, erwachsene=:erwachsene, jugendliche=:jugendliche, kinder=:kinder,
-                    checkinDatum=:checkinDatum, checkoutDatum=:checkoutDatum, buchungsDatum=:buchungsDatum, preis=:preis, zahlungsDatum=:zahlungsDatum,
-                    zahlungsartID=:zahlungsartID, fruehstuecksanzahl=:fruehstuecksanzahl, bvorname=:bvorname, bnachname=:bnachname,
-                    bgeburtsdatum=:bgeburtsdatum, badresse=:badresse, bplz=:bplz, bort=:bort, btelefonnummer=:btelefonnummer,
-                    bmail=:bmail, bmitglied=:bmitglied
+                    huetteID=:huetteID, buchungID=:buchungID, datum=:datum
                     ";
      
         // prepare query
@@ -250,55 +360,19 @@ class Rechnung {
      
         // sanitize
         $this->huetteID=htmlspecialchars(strip_tags($this->huetteID));
-        $this->zimmerID=htmlspecialchars(strip_tags($this->zimmerID));
-        $this->erwachsene=htmlspecialchars(strip_tags($this->erwachsene));
-        $this->jugendliche=htmlspecialchars(strip_tags($this->jugendliche));
-        $this->kinder=htmlspecialchars(strip_tags($this->kinder));
-        $this->checkinDatum=htmlspecialchars(strip_tags($this->checkinDatum));
-        $this->checkoutDatum=htmlspecialchars(strip_tags($this->checkoutDatum));
-        $this->buchungsDatum=htmlspecialchars(strip_tags($this->buchungsDatum));
-        $this->preis=htmlspecialchars(strip_tags($this->preis));
-        $this->zahlungsDatum=htmlspecialchars(strip_tags($this->zahlungsDatum));
-        $this->zahlungsartID=htmlspecialchars(strip_tags($this->zahlungsartID));
-        $this->fruehstuecksanzahl = htmlspecialchars(strip_tags($this->fruehstuecksanzahl));
-        $this->bvorname = htmlspecialchars(strip_tags($this->bvorname));
-        $this->bnachname = htmlspecialchars(strip_tags($this->bnachname));
-        $this->bgeburtsdatum = htmlspecialchars(strip_tags($this->bgeburtsdatum));
-        $this->badresse = htmlspecialchars(strip_tags($this->badresse));
-        $this->bplz = htmlspecialchars(strip_tags($this->bplz));
-        $this->bort = htmlspecialchars(strip_tags($this->bort));
-        $this->btelefonnummer = htmlspecialchars(strip_tags($this->btelefonnummer));
-        $this->bmail = htmlspecialchars(strip_tags($this->bmail));
-        $this->bmitglied = htmlspecialchars(strip_tags($this->bmitglied));
+        $this->buchungID=htmlspecialchars(strip_tags($this->buchungID));
+        $this->datum=htmlspecialchars(strip_tags($this->datum));
 
 
      
         // bind values
         $stmt->bindParam(":huetteID", $this->huetteID);
-        $stmt->bindParam(":zimmerID", $this->zimmerID);
-        $stmt->bindParam(":erwachsene", $this->erwachsene);
-        $stmt->bindParam(":jugendliche", $this->jugendliche);
-        $stmt->bindParam(":kinder", $this->kinder);
-        $stmt->bindParam(":checkinDatum", $this->checkinDatum);
-        $stmt->bindParam(":checkoutDatum", $this->checkoutDatum);
-        $stmt->bindParam(":buchungsDatum", $this->buchungsDatum);
-        $stmt->bindParam(":preis", $this->preis);
-        $stmt->bindParam(":zahlungsDatum", $this->zahlungsDatum);
-        $stmt->bindParam(":zahlungsartID", $this->zahlungsartID);
-        $stmt->bindParam(":fruehstuecksanzahl", $this->fruehstuecksanzahl);
-        $stmt->bindParam(":bvorname", $this->bvorname);
-        $stmt->bindParam(":bnachname", $this->bnachname);
-        $stmt->bindParam(":bgeburtsdatum", $this->bgeburtsdatum);
-        $stmt->bindParam(":badresse", $this->badresse);
-        $stmt->bindParam(":bplz", $this->bplz);
-        $stmt->bindParam(":bort", $this->bort);
-        $stmt->bindParam(":btelefonnummer", $this->btelefonnummer);
-        $stmt->bindParam(":bmail", $this->bmail);
-        $stmt->bindParam(":bmitglied", $this->bmitglied);
+        $stmt->bindParam(":buchungID", $this->buchungID);
+        $stmt->bindParam(":datum", $this->datum);
      
         // execute query
         if($stmt->execute()){
-            $this->buchungID = $this->conn->insert_id;
+            $this->rechnungID = $this->conn->insert_id;
             return true;
         }
      
