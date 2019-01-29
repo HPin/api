@@ -27,6 +27,10 @@ class Rechnung {
     public $buchungID;
     public $datum;
 
+    // external properties
+    public $bvorname;
+    public $bnachname;
+
     // mail properties
     public $receiver;
     public $subject;
@@ -97,7 +101,7 @@ class Rechnung {
 
         <table width="100%">
             <tr>
-                <td valign="top"><img src="logo.jpg" alt="" width="150"/></td>
+                <td valign="top"><img src="../images/logo_linz.png" alt="" width="150"/></td>
                 <td align="right">
                     <h3>'.$huette->name.'</h3>
                     <pre>
@@ -303,11 +307,238 @@ class Rechnung {
 
     }
 
+
+
+
+
+    function downloadPDF() {
+        $database = new Database();
+        $db = $database->getConnection();
+
+        // create huette object and fill its parameters
+        $huette = new Huette($db);
+        $huette->huetteID = $this->huetteID;
+        $huette->readOne();
+
+        // create buchung object and fill its parameters
+        $buchung = new Buchung($db);
+        $buchung->buchungID = $this->buchungID;
+        $buchung->readOne();
+
+        // get one room and fill its parameters
+        $zimmer = new Zimmer($db);
+        $zimmer->zimmerID = $buchung->zimmerID;
+        $zimmer->readOne();
+
+        // get number of nights:
+        $date1 = new DateTime($buchung->checkinDatum);
+        $date2 = new DateTime($buchung->checkoutDatum);
+        $numberOfNights= $date2->diff($date1)->format("%a"); 
+
+        // invoice date format:
+        $this->datum = date_create($this->datum);
+
+        // get prices for the stay
+        $fruehstueckGesamtpreis = $buchung->fruehstuecksanzahl * $huette->fruehstueckspreis * $numberOfNights;
+
+        $erwachseneNights = $buchung->erwachsene * $numberOfNights;
+        $erwachseneGesamtpreis = $zimmer->preisErw * $erwachseneNights;
+
+        $jugendlicheNights = $buchung->jugendliche * $numberOfNights;
+        $jugendlicheGesamtpreis = $zimmer->preisJgd * $jugendlicheNights;
+
+        $kinderNights = $buchung->kinder * $numberOfNights;
+        $kinderGesamtpreis = 0;
+
+        $anzahlung = ($fruehstueckGesamtpreis + $erwachseneGesamtpreis + $jugendlicheGesamtpreis + $kinderGesamtpreis) * 0.5;
+
+        $gesamtpreisBrutto = $fruehstueckGesamtpreis + $erwachseneGesamtpreis + $jugendlicheGesamtpreis + $kinderGesamtpreis - $anzahlung;
+        $gesamtpreisNetto = $gesamtpreisBrutto / 1.1;
+        $steuer = $gesamtpreisBrutto - $gesamtpreisNetto;
+
+        $itemCounter = 0;
+        $formatter = new NumberFormatter('de_AT',  NumberFormatter::CURRENCY);
+
+        $html_code = '
+        <!doctype html>
+        <html lang="de">
+        <head>
+            <meta charset="UTF-8">
+            <title>Rechnung</title>
+            <link rel="stylesheet" href="invoice.css">
+        </head>
+        <body>
+
+        <table width="100%">
+            <tr>
+                <td valign="top"><img src="../images/logo_linz.png" alt="" width="150"/></td>
+                <td align="right">
+                    <h3>'.$huette->name.'</h3>
+                    <pre>
+                        Max Musterpächter
+                        '.$huette->adresse.'
+                        '.$huette->plz.' '.$huette->ort.'
+                        '.$huette->telefonnummer.'
+                        '.$huette->mail.'
+                    </pre>
+                </td>
+            </tr>
+
+        </table>
+
+        <table width="100%">
+            <tr>
+                <td>'.$buchung->bvorname.' '.$buchung->bnachname.'</td>
+            </tr>
+            <tr>
+                <td>'.$buchung->badresse.'</td>
+            </tr>
+            <tr>
+                <td>'.$buchung->bplz.' '.$buchung->bort.'</td>
+            </tr>
+        </table>
+
+        <br>
+        <p><strong>Rechnungsdatum:</strong> '.date_format($this->datum,"d.m.Y").'</p>
+
+        <h1>Rechnung Nr. '.$this->rechnungID.'</h1>
+
+        <table width="100%">
+            <thead style="background-color: lightgray;">
+            <tr>
+                <th>#</th>
+                <th>Beschreibung</th>
+                <th>Menge</th>
+                <th>Preis pro Einheit €</th>
+                <th>Gesamt €</th>
+            </tr>
+            </thead>
+            <tbody>
+        ';
+
+
+        if ($fruehstueckGesamtpreis > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Frühstück</td>
+                <td align="right">'.$buchung->fruehstuecksanzahl.'</td>
+                <td align="right">'.$formatter->formatCurrency($huette->fruehstueckspreis, 'EUR').'</td>
+                <td align="right">'.$formatter->formatCurrency($fruehstueckGesamtpreis, 'EUR').'</td>
+            </tr>
+            ';
+        }
+
+        if ($erwachseneNights > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Übernachtung Erwachsene</td>
+                <td align="right">'.$erwachseneNights.'</td>
+                <td align="right">'.$formatter->formatCurrency($zimmer->preisErw, 'EUR').'</td>
+                <td align="right">'.$formatter->formatCurrency($erwachseneGesamtpreis, 'EUR').'</td>
+            </tr>
+            ';
+        }
+
+        if ($jugendlicheNights > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Übernachtung Jugendliche</td>
+                <td align="right">'.$jugendlicheNights.'</td>
+                <td align="right">'.$formatter->formatCurrency($zimmer->preisJgd, 'EUR').'</td>
+                <td align="right">'.$formatter->formatCurrency($jugendlicheGesamtpreis, 'EUR').'</td>
+            </tr>
+            ';
+        }
+
+        if ($kinderNights > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Übernachtung Kinder</td>
+                <td align="right">'.$kinderNights.'</td>
+                <td align="right">€ 0,00</td>
+                <td align="right">'.$formatter->formatCurrency($kinderGesamtpreis, 'EUR').'</td>
+            </tr>
+            ';
+        }
+
+        if ($anzahlung > 0) {
+            $itemCounter++;
+            $html_code .= '
+            <tr>
+                <th scope="row">'.$itemCounter.'</th>
+                <td>Anzahlung</td>
+                <td align="right"></td>
+                <td align="right"></td>
+                <td align="right">- '.$formatter->formatCurrency($anzahlung, 'EUR').'</td>
+            </tr>
+            ';
+        }
+            
+        $html_code .= '
+            </tbody>
+
+            <tfoot>
+                <tr>
+                    <td colspan="3"></td>
+                    <td align="right">Netto €</td>
+                    <td align="right">'.$formatter->formatCurrency($gesamtpreisNetto, 'EUR').'</td>
+                </tr>
+                <tr>
+                    <td colspan="3"></td>
+                    <td align="right">10 % USt €</td>
+                    <td align="right">'.$formatter->formatCurrency($steuer, 'EUR').'</td>
+                </tr>
+                <tr>
+                    <td colspan="3"></td>
+                    <td align="right">Gesamt (brutto) €</td>
+                    <td align="right" class="gray">'.$formatter->formatCurrency($gesamtpreisBrutto, 'EUR').'</td>
+                </tr>
+            </tfoot>
+        </table>
+
+        </body>
+        </html>
+        ';
+
+
+        // instantiate and use the dompdf class
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html_code);
+
+        // (Optional) Setup the paper size and orientation
+        $dompdf->setPaper('A4', 'portrait');
+
+        // Render the HTML as PDF
+        $dompdf->render();
+
+        $dompdf->stream();
+    }
+
+
+
+
+
+
+
+
     // read bookings
     function read() {
      
         // select all query
-        $query = "SELECT * FROM rechnung";
+        $query = "SELECT
+            r.*, b.bvorname, b.bnachname
+            FROM
+                rechnung r, buchung b
+                WHERE r.buchungID = b.buchungID
+            ";
      
         // prepare query statement
         $stmt = $this->conn->prepare($query);
@@ -322,7 +553,7 @@ class Rechnung {
     function readOne(){
      
         // query to read single record
-        $query = $query = "SELECT * FROM " . $this->table_name . " r
+        $query = $query = "SELECT * FROM ".$this->table_name." r
                     WHERE r.rechnungID = ?
                     LIMIT 0,1";
      

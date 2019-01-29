@@ -39,7 +39,9 @@ if($num>0){
             "rechnungID" => $rechnungID,
             "huetteID" => $huetteID,
             "buchungID" => $buchungID,
-            "datum" => $datum
+            "datum" => $datum,
+            "bvorname" => $bvorname,
+            "bnachname" => $bnachname
         );
  
         array_push($object_arr["records"], $object_item);
